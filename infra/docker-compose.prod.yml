@@ -38,7 +38,7 @@ services:
       redis:
         condition: service_healthy
     ports:
-      - "8080:8080"
+      - "8081:8080"
       - "8070:8070"
     volumes:
       - ./config.yml:/opt/jumpserver/config.yml:ro
@@ -46,6 +46,15 @@ services:
     environment:
       SECRET_KEY: ${SECRET_KEY}
       BOOTSTRAP_TOKEN: ${BOOTSTRAP_TOKEN}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      DB_ENGINE: postgresql
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: jumpserver
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: jumpserver
     command: ["start", "all"]
 
 volumes:
