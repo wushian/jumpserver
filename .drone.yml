@@ -68,6 +68,7 @@ steps:
           HTTP_BIND_HOST: 0.0.0.0
           HTTP_LISTEN_PORT: 8080
           WS_LISTEN_PORT: 8070
+          DOMAINS: 172.17.1.25:8081
           EOF
         - |
           cat > .env <<EOF
