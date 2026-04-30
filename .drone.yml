@@ -19,7 +19,6 @@ steps:
       target: /app/jumpserver
       source:
         - infra/docker-compose.prod.yml
-        - infra/nginx.conf
 
   - name: deploy
     image: appleboy/drone-ssh
@@ -51,8 +50,7 @@ steps:
         - mkdir -p /app/jumpserver
         - cd /app/jumpserver
         - mv infra/docker-compose.prod.yml docker-compose.yml 2>/dev/null || true
-        - mv infra/nginx.conf nginx.conf 2>/dev/null || true
-        - |
+- |
           cat > config.yml <<EOF
           SECRET_KEY: ${SECRET_KEY}
           BOOTSTRAP_TOKEN: ${BOOTSTRAP_TOKEN}
@@ -82,6 +80,6 @@ steps:
         - docker compose up -d db redis
         - until docker exec jms_db pg_isready -U jumpserver; do sleep 2; done
         - docker exec jms_db psql -U jumpserver -d jumpserver -c "DELETE FROM django_celery_beat_periodictask;" 2>/dev/null || true
-        - docker compose up -d --force-recreate core nginx
+        - docker compose up -d --force-recreate core web
         - docker image prune -f
         - echo "Deployment complete!"

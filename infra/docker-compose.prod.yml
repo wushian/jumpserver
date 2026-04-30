@@ -59,16 +59,17 @@ services:
       DOMAINS: ${DOMAINS:-172.17.1.25:8081}
     command: ["start", "all"]
 
-  nginx:
-    image: nginx:1.26-alpine
-    container_name: jms_nginx
+  web:
+    image: jumpserver/web:v4.10.17-ce
+    container_name: jms_web
     restart: always
     depends_on:
       - core
     ports:
       - "8081:80"
+    environment:
+      - CORE_HOST=http://core:8080
     volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
       - core_data:/opt/jumpserver/data:ro
 
 volumes:
