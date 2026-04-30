@@ -46,6 +46,7 @@ steps:
         - BOOTSTRAP_TOKEN
         - GH_PAT
       script:
+        - set -e
         - mkdir -p /app/jumpserver
         - cd /app/jumpserver
         - mv infra/docker-compose.prod.yml docker-compose.yml 2>/dev/null || true
@@ -75,6 +76,6 @@ steps:
           EOF
         - echo "$GH_PAT" | docker login ghcr.io -u wushian --password-stdin
         - docker compose pull core
-        - docker compose up -d --force-recreate core
+        - docker compose up -d --force-recreate core db redis
         - docker image prune -f
         - echo "Deployment complete!"
