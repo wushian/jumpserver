@@ -1,0 +1,80 @@
+kind: pipeline
+type: docker
+name: deploy
+
+# 只由 GitHub Actions build 完成後觸發，不回應 git push
+trigger:
+  event:
+    - custom
+
+steps:
+  - name: copy-compose
+    image: appleboy/drone-scp
+    settings:
+      host: 172.17.1.25
+      username: root
+      password:
+        from_secret: ssh_password
+      port: 22
+      target: /app/jumpserver
+      source:
+        - infra/docker-compose.prod.yml
+
+  - name: deploy
+    image: appleboy/drone-ssh
+    environment:
+      DB_PASSWORD:
+        from_secret: db_password
+      REDIS_PASSWORD:
+        from_secret: redis_password
+      SECRET_KEY:
+        from_secret: secret_key
+      BOOTSTRAP_TOKEN:
+        from_secret: bootstrap_token
+      GH_PAT:
+        from_secret: gh_pat
+    settings:
+      host: 172.17.1.25
+      username: root
+      password:
+        from_secret: ssh_password
+      port: 22
+      envs:
+        - DB_PASSWORD
+        - REDIS_PASSWORD
+        - SECRET_KEY
+        - BOOTSTRAP_TOKEN
+        - GH_PAT
+      script:
+        - mkdir -p /app/jumpserver
+        - cd /app/jumpserver
+        - mv infra/docker-compose.prod.yml docker-compose.yml 2>/dev/null || true
+        - |
+          cat > config.yml <<EOF
+          SECRET_KEY: ${SECRET_KEY}
+          BOOTSTRAP_TOKEN: ${BOOTSTRAP_TOKEN}
+          DB_ENGINE: postgresql
+          DB_HOST: db
+          DB_PORT: 5432
+          DB_USER: jumpserver
+          DB_PASSWORD: ${DB_PASSWORD}
+          DB_NAME: jumpserver
+          REDIS_HOST: redis
+          REDIS_PORT: 6379
+          REDIS_PASSWORD: ${REDIS_PASSWORD}
+          HTTP_BIND_HOST: 0.0.0.0
+          HTTP_LISTEN_PORT: 8080
+          WS_LISTEN_PORT: 8070
+          EOF
+        - |
+          cat > .env <<EOF
+          DB_PASSWORD=${DB_PASSWORD}
+          REDIS_PASSWORD=${REDIS_PASSWORD}
+          SECRET_KEY=${SECRET_KEY}
+          BOOTSTRAP_TOKEN=${BOOTSTRAP_TOKEN}
+          EOF
+        - echo "$GH_PAT" | docker login ghcr.io -u wushian --password-stdin
+        - docker compose pull core
+        - docker compose up -d --force-recreate core
+        - docker image prune -f
+        - echo "Deployment complete!"

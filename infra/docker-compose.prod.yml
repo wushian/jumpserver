@@ -1,0 +1,54 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: jms_db
+    restart: always
+    environment:
+      POSTGRES_DB: jumpserver
+      POSTGRES_USER: jumpserver
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U jumpserver"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: jms_redis
+    restart: always
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  core:
+    image: ghcr.io/wushian/jumpserver:main
+    container_name: jms_core
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+      - "8070:8070"
+    volumes:
+      - ./config.yml:/opt/jumpserver/config.yml:ro
+      - core_data:/opt/jumpserver/data
+    environment:
+      SECRET_KEY: ${SECRET_KEY}
+      BOOTSTRAP_TOKEN: ${BOOTSTRAP_TOKEN}
+    command: ["start", "all"]
+
+volumes:
+  db_data:
+  redis_data:
+  core_data:
