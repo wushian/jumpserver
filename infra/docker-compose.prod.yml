@@ -59,18 +59,43 @@ services:
       DOMAINS: ${DOMAINS:-172.17.1.25:8081}
     command: ["start", "all"]
 
+  chen:
+    image: jumpserver/chen:v4.10.17-ce
+    container_name: jms_chen
+    restart: always
+    expose:
+      - "80"
+
+  koko:
+    image: jumpserver/koko:v4.10.17-ce
+    container_name: jms_koko
+    restart: always
+    depends_on:
+      - core
+    expose:
+      - "2222"
+      - "5000"
+    ports:
+      - "2222:2222"
+    environment:
+      CORE_HOST: http://core:8080
+      BOOTSTRAP_TOKEN: ${BOOTSTRAP_TOKEN}
+      LOG_LEVEL: ERROR
+
   web:
     image: jumpserver/web:v4.10.17-ce
     container_name: jms_web
     restart: always
     depends_on:
       - core
+      - chen
+      - koko
     ports:
       - "8081:80"
     environment:
-      - CORE_HOST=http://core:8080
+      CORE_HOST: http://core:8080
     volumes:
-      - core_data:/opt/jumpserver/data:ro
+      - core_data:/opt/jumpserver/data
 
 volumes:
   db_data:
