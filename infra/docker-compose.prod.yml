@@ -66,6 +66,19 @@ services:
     expose:
       - "80"
 
+  lion:
+    image: jumpserver/lion:v4.10.17-ce
+    container_name: jms_lion
+    restart: always
+    depends_on:
+      - core
+    expose:
+      - "8081"
+    environment:
+      CORE_HOST: http://core:8080
+      BOOTSTRAP_TOKEN: ${BOOTSTRAP_TOKEN}
+      LOG_LEVEL: ERROR
+
   koko:
     image: jumpserver/koko:v4.10.17-ce
     container_name: jms_koko

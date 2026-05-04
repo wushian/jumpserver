@@ -80,6 +80,6 @@ steps:
         - docker compose up -d db redis
         - until docker exec jms_db pg_isready -U jumpserver; do sleep 2; done
         - docker exec jms_db psql -U jumpserver -d jumpserver -c "DELETE FROM django_celery_beat_periodictask;" 2>/dev/null || true
-        - docker compose up -d --force-recreate core chen koko web
+        - docker compose up -d --force-recreate core chen lion koko web
         - docker image prune -f
         - echo "Deployment complete!"
