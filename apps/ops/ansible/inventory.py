@@ -186,7 +186,7 @@ class JMSInventory:
 
     @staticmethod
     def fill_ansible_config(ansible_config, protocol):
-        if protocol.name in ('ssh', 'winrm', 'rdp'):
+        if protocol.name in ('ssh', 'winrm'):
             ansible_config['ansible_connection'] = protocol.name
         if protocol.name == 'winrm':
             if protocol.setting.get('use_ssl', False):
