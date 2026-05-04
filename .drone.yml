@@ -83,5 +83,6 @@ steps:
         - docker compose up -d --force-recreate core chen lion koko web
         - sleep 10
         - docker exec jms_core python /opt/jumpserver/apps/manage.py shell -c "from users.models import User; u=User.objects.filter(username='admin').first(); u.set_password('Admin@123'); u.need_update_password=False; u.save(); print('Admin password reset to Admin@123')" 2>/dev/null || true
+        - docker exec jms_core python /opt/jumpserver/apps/manage.py shell -c "from authentication.models import ConnectionToken; from django.core.cache import cache; keys=cache.keys('*login_block*'); [cache.delete(k) for k in keys]; print(f'Cleared {len(keys)} lockout keys')" 2>/dev/null || true
         - docker image prune -f
         - echo "Deployment complete!"
